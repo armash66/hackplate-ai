@@ -15,15 +15,19 @@ def get_hackathon_links(page):
     page.evaluate("window.scrollTo(0, document.body.scrollHeight/2)")
     time.sleep(2)
     
-    # Devfolio links usually look like https://devfolio.co/hackathons/xyz or are in 'a' tags with specific classes
-    # We'll look for links that start with the hackathon pattern
-    hrefs = page.eval_on_selector_all("a[href*='/hackathons/']", "elements => elements.map(e => e.href)")
+    # Devfolio links follow the pattern: https://[hackathon-slug].devfolio.co/
+    hrefs = page.eval_on_selector_all("a[href*='.devfolio.co']", "elements => elements.map(e => e.href)")
     
-    # Filter unique links and exclude the base listing page if it appeared
+    # Filter unique links and exclude the base domain and internal subdomains
+    exclude_subdomains = ['dashboard.devfolio.co', 'api.devfolio.co', 'auth.devfolio.co']
     unique_links = []
     for link in hrefs:
-        if link != BASE_URL and link not in unique_links:
-            unique_links.append(link)
+        # Check if it's a subdomain and not the main domain
+        if 'devfolio.co' in link and 'devfolio.co/hackathons' not in link:
+            # Check for specific subdomain pattern
+            if not any(sub in link for sub in exclude_subdomains) and link.startswith('https://'):
+                if link not in unique_links:
+                    unique_links.append(link)
     
     return unique_links
 
