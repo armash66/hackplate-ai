@@ -35,12 +35,18 @@ def _matches(event: models.Event, rule: models.NotificationRule) -> bool:
     # Location check (if rule has location)
     if rule.location:
         rule_lat, rule_lon = geocode(rule.location)
-        if rule_lat and rule_lon and event.lat and event.lon:
+        if not rule_lat or not rule_lon:
+            print(f"  [notify] Warning: Rule location '{rule.location}' could not be geocoded. Falling back to exact match.")
+            if event.city.lower() != rule.location.lower():
+                return False
+        elif event.lat and event.lon:
             dist = haversine(rule_lat, rule_lon, event.lat, event.lon)
             if dist > rule.radius_km:
                 return False
-        elif event.city.lower() != rule.location.lower():
-            return False
+        else:
+            # Event has no lat/lon but rule does. Fallback to exact match.
+            if event.city.lower() != rule.location.lower():
+                return False
 
     return True
 

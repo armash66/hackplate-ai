@@ -10,6 +10,7 @@ export default function NotificationsPage() {
         food_required: true, channel: "telegram",
     });
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -19,22 +20,56 @@ export default function NotificationsPage() {
     if (!mounted) return null;
 
     async function loadRules() {
-        try { setRules((await getRules()).data); }
-        catch { setError("Login required to manage alert rules."); }
+        try {
+            setRules((await getRules()).data);
+            setError("");
+        }
+        catch (err) {
+            if (err.response && err.response.status === 401) {
+                setError("Login required to manage alert rules.");
+            } else {
+                setError("Failed to load rules. Please try again.");
+            }
+        }
     }
 
     async function handleCreate() {
         if (!form.location) return;
+        if (form.radius_km <= 0 || form.min_score < 0) {
+            setError("Radius must be > 0 and Min Score must be >= 0.");
+            return;
+        }
+        if (loading) return;
+
+        setLoading(true);
+        setError("");
         try {
             await createRule(form);
             setForm({ location: "", radius_km: 50, min_score: 3, food_required: true, channel: "telegram" });
             loadRules();
-        } catch (e) { setError("Failed to create rule. Are you logged in?"); }
+        } catch (e) {
+            if (e.response && e.response.status === 401) {
+                setError("Failed to create rule. Are you logged in?");
+            } else {
+                setError("An error occurred creating the rule.");
+            }
+        } finally {
+            setLoading(false);
+        }
     }
 
     async function handleDelete(id) {
-        await deleteRule(id);
-        loadRules();
+        if (loading) return;
+        setLoading(true);
+        setError("");
+        try {
+            await deleteRule(id);
+            loadRules();
+        } catch (e) {
+            setError("Failed to delete the rule.");
+        } finally {
+            setLoading(false);
+        }
     }
 
     return (
