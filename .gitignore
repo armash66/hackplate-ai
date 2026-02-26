@@ -17,3 +17,6 @@ __pycache__/
 
 # Node (future proof)
 node_modules/
+
+# Database
+hackplate.db
