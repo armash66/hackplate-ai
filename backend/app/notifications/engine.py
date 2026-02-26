@@ -16,7 +16,10 @@ def match_and_notify(db: Session, new_events: list[models.Event]):
     for event in new_events:
         for rule in rules:
             if _matches(event, rule):
-                _dispatch(event, rule)
+                try:
+                    _dispatch(event, rule)
+                except Exception as e:
+                    print(f"  [notify] Dispatch failed for rule {rule.id}: {e}")
 
 
 def _matches(event: models.Event, rule: models.NotificationRule) -> bool:

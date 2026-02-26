@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from .database import init_db, get_db
 from .auth.router import router as auth_router
+from .auth.utils import get_current_user
 from .events.router import router as events_router
 from .notifications.router import router as notifications_router
 from .analytics.router import router as analytics_router
@@ -52,12 +53,14 @@ def root():
 def trigger_ingestion(
     limit: int = 10,
     db: Session = Depends(get_db),
+    user=Depends(get_current_user),  # Enforce auth
 ):
     """
-    Trigger a manual ingestion run.
+    Trigger a manual ingestion run. Requires authentication.
     Scrapes all sources, scores, deduplicates, stores, and notifies.
     """
-    new_events = run_ingestion(db, limit=limit)
+    safe_limit = max(1, min(limit, 50))  # Bound limit to 50 max
+    new_events = run_ingestion(db, limit=safe_limit)
     match_and_notify(db, new_events)
     return {
         "message": f"Ingestion complete. {len(new_events)} new events stored.",

@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./hackplate.db"
 
     # JWT
-    JWT_SECRET: str = "change-me-in-production"
+    JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 1440  # 24 hours
 
