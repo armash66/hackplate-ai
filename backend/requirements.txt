@@ -1,0 +1,23 @@
+# Core
+fastapi
+uvicorn[standard]
+pydantic[email]
+pydantic-settings
+python-dotenv
+
+# Database
+sqlalchemy
+psycopg2-binary
+
+# Auth
+passlib[bcrypt]
+python-jose[cryptography]
+bcrypt
+
+# Scraping
+playwright
+beautifulsoup4
+requests
+
+# Geocoding
+geopy

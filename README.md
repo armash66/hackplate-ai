@@ -1,154 +1,129 @@
-# HackPlate
+# HackPlate -- Student Event Intelligence Platform
 
-A modular system that scrapes hackathon listings, detects food-related perks, scores them by relevance, persists results, and sends notifications.
+HackPlate is a full-stack SaaS platform designed to solve a specific problem for students: finding hackathons that offer food, travel reimbursements, and high-quality experiences.
 
----
+Instead of manually browsing multiple hackathon listing sites, HackPlate aggregates events, uses keyword-based intelligence to score them, extracts location data, and provides a centralized dashboard and alert system.
 
-## Overview
+## 🚀 Features
 
-HackPlate was built to solve a simple problem: finding hackathons that actually feed you. Rather than manually browsing listings, HackPlate automates the entire pipeline — from scraping event pages to alerting you when food perks are detected.
+- **Multi-Source Ingestion:** Automatically scrapes events from platforms like Devfolio and Unstop.
+- **Food Intelligence Engine:** Tiered scoring system that detects direct food offers, sponsor signals, and duration-based likelihoods.
+- **Location-Aware:** Extracts event cities and provides geo-radius search using the Haversine formula (e.g., "Find events within 50km of Mumbai").
+- **Real-Time Alerts:** Users can create custom notification rules (location, radius, minimum score) and receive instant Telegram alerts when matching events are found.
+- **Analytics Dashboard:** Visual insights into event trends, top cities, and platform activity.
+- **Saved Events:** Users can bookmark high-value events to their profile.
+- **Interactive Map:** Leaflet-powered map visualizing event density and food availability.
 
-The architecture is intentionally modular. Each concern lives in its own module, making the system easy to extend with new sources, scoring logic, or notification channels.
+## 🏗️ Architecture
 
----
+HackPlate uses a modern, layered SaaS architecture:
 
-## Features
+- **Frontend:** Next.js (React), Tailwind CSS, Chart.js, Leaflet
+- **Backend:** FastAPI (Python), SQLAlchemy, Pydantic
+- **Database:** PostgreSQL (via Supabase)
+- **Auth:** JWT (JSON Web Tokens) with bcrypt password hashing
+- **Ingestion:** Playwright and BeautifulSoup4
+- **Notifications:** Telegram Bot API
 
-- **Playwright Scraper** — Handles JavaScript-rendered pages on Devfolio. Extracts event titles, URLs, and full page text.
-- **Food Scoring Engine** — Tier-based keyword detection that returns a relevance score alongside matched terms. Not a simple boolean.
-- **SQLite Persistence** — Stores detected events locally. Deduplicates by URL hash so the same event is never saved or re-notified twice.
-- **Telegram Notifications** — Sends a formatted message to a configured Telegram bot when a food event is found.
-
----
-
-## Project Structure
-
+### Project Structure
+```text
+hackplate-ai/
+├── backend/
+│   ├── app/
+│   │   ├── analytics/       # API: Dashboard stats & charts
+│   │   ├── auth/            # API: JWT login & registration
+│   │   ├── events/          # API: Geo-search, filtering, saving
+│   │   ├── ingestion/       # Scrapers (Devfolio/Unstop) & runner
+│   │   ├── intelligence/    # Food scoring, geocoding & Haversine
+│   │   └── notifications/   # Rules CRUD & matching engine
+│   └── requirements.txt     # Python dependencies
+└── frontend/
+    ├── src/
+    │   ├── app/             # Next.js Pages (Dashboard, Map, Search, Alerts)
+    │   └── lib/             # Axios API client & interceptors
+    ├── package.json         # Node.js dependencies
+    └── tailwind.config.js   # Styling configuration
 ```
-hackplate/
-│
-├── app/
-│   ├── scraper.py       # Playwright-based Devfolio scraper
-│   ├── detector.py      # Tiered food keyword scoring engine
-│   ├── database.py      # SQLite storage and deduplication
-│   ├── notifier.py      # Telegram alert integration
-│   └── main.py          # Entry point — orchestrates the pipeline
-│
-├── hackplate.db         # Auto-generated SQLite database (gitignored)
-├── requirements.txt
-├── .env                 # Secrets — not committed (see Configuration)
-├── .gitignore
-└── README.md
-```
 
----
+## ⚙️ Installation & Setup
 
-## Installation
+### Prerequisites
+- Python 3.10+
+- Node.js 18+
+- PostgreSQL Database (Supabase recommended)
+- Telegram Bot Token (via BotFather)
 
-**1. Clone the repository**
+### 1. Database Setup
+1. Create a project on [Supabase](https://supabase.com).
+2. Copy your PostgreSQL Connection String (Session mode).
 
+### 2. Backend Setup
 ```bash
-git clone https://github.com/your-username/hackplate-ai.git
-cd hackplate-ai
-```
+cd backend
 
-**2. Install Python dependencies**
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-**3. Install the Playwright browser**
-
-```bash
+# Install Playwright browsers (for Devfolio scraper)
 playwright install chromium
 ```
 
----
-
-## Configuration
-
-Create a `.env` file in the project root. Telegram credentials are optional — the system will skip notifications and log a warning if they are absent.
-
+### 3. Environment Variables
+Create a `.env` file in the root directory:
 ```env
+# Database
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.xxxxx.supabase.co:5432/postgres
+
+# Security
+JWT_SECRET=your_super_secret_jwt_key
+
+# Telegram
 TELEGRAM_BOT_TOKEN=your_bot_token_here
 TELEGRAM_CHAT_ID=your_chat_id_here
 ```
 
-To get these values:
-- Create a bot via [@BotFather](https://t.me/BotFather) on Telegram.
-- Use [@userinfobot](https://t.me/userinfobot) to retrieve your chat ID.
-
----
-
-## Usage
-
+### 4. Frontend Setup
 ```bash
-python app/main.py
+cd frontend
+
+# Install dependencies
+npm install
 ```
 
-**Example output:**
+## 🚀 Running the Platform
 
+You need to run both the backend and frontend simultaneously.
+
+**Start the Backend (FastAPI):**
+```bash
+cd backend
+uvicorn app.main:app --reload
 ```
-========================================
-  HackPlate v1.5 - Food Intelligence
-========================================
-Navigating to https://devfolio.co/hackathons...
-Found 31 hackathons. Visiting top 5...
+The API will run at `http://localhost:8000`. Swagger UI is available at `http://localhost:8000/docs`.
 
-Scraping: https://campfire-hackathon.devfolio.co/
-
-========================================
-Food Detected!
-   Title    : Campfire Hackathon
-   URL      : https://campfire-hackathon.devfolio.co/
-   Keywords : food, refreshments
-   Score    : 3
-   Saved to database.
-   Telegram alert sent.
-========================================
-
-HackPlate v1.5 run complete.
+**Start the Frontend (Next.js):**
+```bash
+cd frontend
+npm run dev
 ```
+The dashboard will be available at `http://localhost:3000`.
 
----
+## 🧠 Intelligence Scoring Logic
 
-## Scoring Logic
+The platform assigns a `relevance_score` to each event based on:
 
-The detector uses a tiered scoring system:
+1. **Food Tiers (0-3 pts):** Explicit offers ("catered", "free food") score higher than general mentions ("snacks", "pizza").
+2. **Hackathon Relevance (0-3 pts):** Keywords indicating active building.
+3. **Sponsor Density (0-3 pts):** Mentions of major tech sponsors (MLH, Devfolio, Google, etc.).
+4. **Duration Bonus (1-2 pts):** 24hr+ and 48hr+ events are more likely to provide full catering.
 
-| Tier | Examples | Points |
-|------|----------|--------|
-| 1 — High confidence | "free food", "meals provided", "catered" | 3 |
-| 2 — Sponsor signals | "food sponsor", "sponsored meals" | 2 |
-| 3 — General mentions | "food", "pizza", "snacks", "lunch" | 1 |
-| Bonus | "free" appears alongside any food keyword | +1 |
+## 📝 Usage
 
-A higher score indicates stronger evidence that food will actually be provided, not just mentioned in passing.
-
----
-
-## Roadmap
-
-| Version | Features |
-|---------|----------|
-| v1 | Devfolio scraper, keyword detection, structured output |
-| v1.5 | Scoring engine, SQLite storage, Telegram notifications |
-| v2 | Multi-source (Unstop, HackerEarth), scheduler |
-| v3 | Semantic detection via LLM |
-
----
-
-## Requirements
-
-```
-playwright
-beautifulsoup4
-requests
-python-dotenv
-```
-
----
-
-## License
-
-MIT
+1. **Create an Account:** Register via the frontend.
+2. **Trigger Ingestion:** Click "Run Scraper" on the dashboard to populate the database.
+3. **Set Up Alerts:** Go to the Alerts page, define your city, search radius, and minimum score threshold.
+4. **Receive Notifications:** The backend matching engine will automatically alert your Telegram when a matching hackathon is found.
