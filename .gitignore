@@ -1,19 +1,33 @@
-# Python cache
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Virtual environment
 .venv/
 
-# Environment variables
+# Environment
 .env
+.env.*
 
 # Testing
 .pytest_cache/
 
-# VS Code
+# IDE
 .vscode/
+.idea/
 
-# Node (future proof)
+# Node
 node_modules/
+.next/
+out/
+
+# Database
+hackplate.db
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
