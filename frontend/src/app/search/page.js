@@ -1,14 +1,21 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { searchEvents } from "../../lib/api";
 
 export default function SearchPage() {
+    const [mounted, setMounted] = useState(false);
     const [filters, setFilters] = useState({
         location: "", radius_km: 50, min_score: 0,
         source: "", event_type: "", food_only: false,
     });
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) return null;
 
     async function handleSearch() {
         setLoading(true);

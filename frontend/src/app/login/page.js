@@ -1,13 +1,20 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { login, register } from "../../lib/api";
 
 export default function LoginPage() {
+    const [mounted, setMounted] = useState(false);
     const [isRegister, setIsRegister] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) return null;
 
     async function handleSubmit(e) {
         e.preventDefault();

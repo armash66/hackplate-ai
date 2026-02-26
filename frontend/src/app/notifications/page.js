@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getRules, createRule, deleteRule } from "../../lib/api";
 
 export default function NotificationsPage() {
+    const [mounted, setMounted] = useState(false);
     const [rules, setRules] = useState([]);
     const [form, setForm] = useState({
         location: "", radius_km: 50, min_score: 3,
@@ -10,7 +11,12 @@ export default function NotificationsPage() {
     });
     const [error, setError] = useState("");
 
-    useEffect(() => { loadRules(); }, []);
+    useEffect(() => {
+        setMounted(true);
+        loadRules();
+    }, []);
+
+    if (!mounted) return null;
 
     async function loadRules() {
         try { setRules((await getRules()).data); }
