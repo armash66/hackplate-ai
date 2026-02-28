@@ -48,168 +48,95 @@ export default function Home() {
 
     return (
         <div className="page h-full relative" style={{ overflowY: 'auto' }}>
-            <div className="flex justify-between items-center mb-6">
+            {/* HERO SECTION */}
+            <div className="flex justify-between items-center mb-10">
                 <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent m-0">Discovery Radar</h1>
-                    <p className="text-gray-400 mt-1">Real-time intelligence on tech events near you.</p>
+                    <h1 className="text-3xl font-bold text-[#F3F4F6] tracking-tight m-0">Opportunity Radar</h1>
+                    <p className="text-[#9CA3AF] mt-1 text-sm font-medium">AI-ranked tech events tailored to your location.</p>
                 </div>
                 <button 
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-5 rounded-lg shadow-lg shadow-indigo-500/30 transition-all flex items-center gap-2" 
+                    className="bg-[#111827] hover:bg-[#1F2937] text-[#F3F4F6] font-medium py-2.5 px-6 rounded-full border border-[#1F2937] transition-all flex items-center gap-2 text-sm shadow-sm" 
                     onClick={handleIngest} 
                     disabled={ingesting}
                 >
                     {ingesting ? (
-                        <><svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Scraping Web...</>
+                        <><svg className="animate-spin h-3.5 w-3.5 text-[#9CA3AF]" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Scanning...</>
                     ) : (
-                        <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Run Global Scraper</>
+                        <><svg className="w-3.5 h-3.5 text-[#6366F1]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Run Scan</>
                     )}
                 </button>
             </div>
 
-            {/* ZONE 2: Top Stats Row */}
+            {/* STATS TILES */}
             {overview && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div className="bg-[#12121a] border border-[#1e1e30] rounded-xl p-4 shadow-lg">
-                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Global Events</h3>
-                        <div className="text-2xl font-bold text-white">{overview.total_events}</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                    <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-5 shadow-sm">
+                        <div className="text-3xl font-bold text-[#F3F4F6] tracking-tight">{overview.total_events}</div>
+                        <h3 className="text-xs font-semibold text-[#9CA3AF] mt-1">Events Near You</h3>
                     </div>
-                    <div className="bg-[#12121a] border border-[#1e1e30] rounded-xl p-4 shadow-lg border-b-2 border-b-orange-500">
-                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Food Confirmed</h3>
-                        <div className="text-2xl font-bold text-orange-400">{overview.food_events}</div>
+                    <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-5 shadow-sm">
+                        <div className="text-3xl font-bold text-[#F3F4F6] tracking-tight">{overview.food_events}</div>
+                        <h3 className="text-xs font-semibold text-[#9CA3AF] mt-1 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span> Avg Food Confidence
+                        </h3>
                     </div>
-                    <div className="bg-[#12121a] border border-[#1e1e30] rounded-xl p-4 shadow-lg">
-                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Active Sources</h3>
-                        <div className="text-2xl font-bold text-blue-400">{overview.total_sources}</div>
+                    <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-5 shadow-sm">
+                        <div className="text-3xl font-bold text-[#F3F4F6] tracking-tight">{overview.total_sources}</div>
+                        <h3 className="text-xs font-semibold text-[#9CA3AF] mt-1">Active Sources</h3>
                     </div>
-                    <div className="bg-[#12121a] border border-[#1e1e30] rounded-xl p-4 shadow-lg">
-                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Trending City</h3>
-                        <div className="text-2xl font-bold text-purple-400 truncate">{overview.top_city}</div>
+                    <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-5 shadow-sm">
+                        <div className="text-3xl font-bold text-[#F3F4F6] tracking-tight truncate">{overview.top_city}</div>
+                        <h3 className="text-xs font-semibold text-[#9CA3AF] mt-1">Trending City</h3>
                     </div>
                 </div>
             )}
 
-            {/* MAIN LAYOUT: Flow Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                {/* ZONE 3: Personalized Feed (Left 2 Columns) */}
-                <div className="lg:col-span-2 space-y-6">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        Best Matches For You
-                    </h2>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {recentEvents.length === 0 ? (
-                            <div className="col-span-2 bg-[#12121a] border border-[#1e1e30] rounded-xl p-10 text-center">
-                                <p className="text-gray-400">No events found in your radar area.</p>
-                                <p className="text-sm text-gray-500 mt-2">Adjust your Saved Search or run the Scraper.</p>
-                            </div>
-                        ) : (
-                            recentEvents.map((ev) => (
-                                <div key={ev.id} className="bg-[#12121a] border border-[#1e1e30] rounded-xl p-5 shadow-lg hover:border-indigo-500/50 hover:shadow-indigo-500/10 transition-all flex flex-col h-full group">
-                                    <div className="flex gap-2 mb-3">
-                                        <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                                            Score: {Math.round(ev.total_score || ev.relevance_score)}
+            {/* EVENT GRID (No specific Layout Sidebars) */}
+            <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {recentEvents.length === 0 ? (
+                        <div className="col-span-full bg-[#111827] border border-[#1F2937] rounded-2xl p-10 text-center">
+                            <p className="text-[#9CA3AF]">No events found in your radar area.</p>
+                            <p className="text-sm text-[#9CA3AF] mt-2">Adjust your Saved Search or run the Scraper.</p>
+                        </div>
+                    ) : (
+                        recentEvents.map((ev) => (
+                            <div key={ev.id} className="bg-[#111827] border border-[#1F2937] rounded-2xl p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 ease-in-out flex flex-col h-full group relative overflow-hidden">
+                                <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-[#6366F1]/20 to-transparent left-0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                
+                                <div className="flex justify-between items-start mb-4">
+                                    <h3 className="text-[17px] font-bold text-[#F3F4F6] leading-tight pr-4 group-hover:text-[#6366F1] transition-colors">{ev.title}</h3>
+                                    <svg className="w-5 h-5 text-[#9CA3AF] hover:text-[#F3F4F6] cursor-pointer transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                                </div>
+                                
+                                <div className="flex items-center gap-2 mb-4">
+                                    <span className="px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full bg-[#1F2937] text-[#9CA3AF] border border-[#374151]">
+                                        {ev.city} • Local Match
+                                    </span>
+                                </div>
+                                
+                                <p className="text-[#9CA3AF] text-sm mb-5 line-clamp-2 leading-relaxed">{ev.description || "Open to see opportunities..."}</p>
+                                
+                                <div className="flex flex-wrap gap-2 mb-6">
+                                    {ev.food_score > 0 && (
+                                        <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md bg-[#1F2937]/50 text-[#F3F4F6] border border-[#1F2937]">
+                                            <span className="text-[10px]">🍕</span> {Math.round(ev.food_likelihood ? ev.food_likelihood * 100 : 80)}% Food Likelihood
                                         </span>
-                                        {ev.food_score > 0 && (
-                                            <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-orange-500/20 text-orange-400 border border-orange-500/30">
-                                                Food
-                                            </span>
-                                        )}
-                                        <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase">
-                                            {ev.event_type}
-                                        </span>
-                                    </div>
-                                    
-                                    <h3 className="text-lg font-bold text-white mb-2 leading-tight group-hover:text-indigo-400 transition-colors">{ev.title}</h3>
-                                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">{ev.description || "No description provided."}</p>
-                                    
-                                    <div className="mt-auto pt-4 border-t border-[#1e1e30] flex flex-col gap-2 relative">
-                                        {/* Premium UX: Why this match? */}
-                                        <div className="text-xs text-gray-500 flex flex-col gap-1 mb-2 bg-[#0a0a0f] p-2 rounded-lg border border-[#1e1e30]/50">
-                                            <strong className="text-gray-400">Matched because:</strong>
-                                            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span> Local to {ev.city}</span>
-                                            {ev.food_likelihood && ev.food_likelihood > 0 && (
-                                                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-orange-500 inline-block"></span> Food Confidence ~{Math.round(ev.food_likelihood * 100)}%</span>
-                                            )}
-                                        </div>
-
-                                        <div className="flex justify-between items-center w-full">
-                                            <span className="text-xs text-gray-500 font-medium">{ev.source}</span>
-                                            <a href={ev.url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-indigo-400 hover:text-indigo-300">
-                                                View Event &rarr;
-                                            </a>
-                                        </div>
-                                    </div>
+                                    )}
+                                    <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md bg-[#1F2937]/50 text-[#F3F4F6] border border-[#1F2937]">
+                                        <span className="text-[#6366F1] text-[10px]">⭐</span> {Math.round(ev.total_score || ev.relevance_score)} Score
+                                    </span>
                                 </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-
-                {/* ZONE 4: Insights Panel (Right Column) */}
-                <div className="space-y-6">
-                    <h2 className="text-xl font-bold text-white">Platform Insights</h2>
-                    
-                    <div className="bg-[#12121a] border border-[#1e1e30] rounded-xl shadow-lg overflow-hidden">
-                        <div className="p-4 border-b border-[#1e1e30] bg-[#1a1a2e]/50">
-                            <h3 className="font-semibold text-sm text-gray-300">Food Score Distribution</h3>
-                        </div>
-                        <div className="p-5 space-y-4">
-                            {/* Fake CSS Charts to mitigate package issues while maintaining UI */}
-                            <div>
-                                <div className="flex justify-between text-xs text-gray-400 mb-1">
-                                    <span>High Confidence (&gt;80%)</span>
-                                    <span>45%</span>
-                                </div>
-                                <div className="w-full bg-gray-800 rounded-full h-2">
-                                    <div className="bg-orange-500 h-2 rounded-full" style={{ width: '45%' }}></div>
+                                
+                                <div className="mt-auto pt-4 border-t border-[#1F2937] flex justify-between items-center w-full">
+                                    <span className="text-[11px] uppercase tracking-wider text-[#9CA3AF] font-bold">{ev.source}</span>
+                                    <a href={ev.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-[#6366F1] hover:text-[#4F46E5] flex items-center gap-1 tracking-wide">
+                                        View <span aria-hidden="true">&rarr;</span>
+                                    </a>
                                 </div>
                             </div>
-                            <div>
-                                <div className="flex justify-between text-xs text-gray-400 mb-1">
-                                    <span>Medium (50-80%)</span>
-                                    <span>35%</span>
-                                </div>
-                                <div className="w-full bg-gray-800 rounded-full h-2">
-                                    <div className="bg-orange-400 h-2 rounded-full" style={{ width: '35%' }}></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div className="flex justify-between text-xs text-gray-400 mb-1">
-                                    <span>Low / Unlikely</span>
-                                    <span>20%</span>
-                                </div>
-                                <div className="w-full bg-gray-800 rounded-full h-2">
-                                    <div className="bg-gray-600 h-2 rounded-full" style={{ width: '20%' }}></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-[#12121a] border border-[#1e1e30] rounded-xl shadow-lg overflow-hidden">
-                        <div className="p-4 border-b border-[#1e1e30] bg-[#1a1a2e]/50">
-                            <h3 className="font-semibold text-sm text-gray-300">Source Reliability</h3>
-                        </div>
-                        <div className="p-5">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                                <div className="flex-1 text-sm text-gray-300">Devfolio</div>
-                                <div className="text-sm font-bold text-white">65%</div>
-                            </div>
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                <div className="flex-1 text-sm text-gray-300">Unstop</div>
-                                <div className="text-sm font-bold text-white">25%</div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                                <div className="flex-1 text-sm text-gray-300">Other</div>
-                                <div className="text-sm font-bold text-white">10%</div>
-                            </div>
-                        </div>
-                    </div>
-                    
+                        ))
+                    )}
                 </div>
             </div>
         </div>
