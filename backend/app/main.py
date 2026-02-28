@@ -9,6 +9,7 @@ from .auth.utils import get_current_user
 from .events.router import router as events_router
 from .notifications.router import router as notifications_router
 from .analytics.router import router as analytics_router
+from .activity.router import router as activity_router
 from .ingestion.runner import run_ingestion
 from .notifications.engine import match_and_notify
 
@@ -42,6 +43,7 @@ app.include_router(auth_router)
 app.include_router(events_router)
 app.include_router(notifications_router)
 app.include_router(analytics_router)
+app.include_router(activity_router)
 
 
 @app.get("/")
