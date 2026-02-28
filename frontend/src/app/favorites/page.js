@@ -57,54 +57,72 @@ export default function FavoritesPage() {
     }
 
     return (
-        <div className="page h-full relative" style={{ overflowY: 'auto' }}>
-            <div className="mb-10">
-                <h1 className="text-3xl font-bold text-[#F3F4F6] tracking-tight m-0">Favorites</h1>
-                <p className="text-[#9CA3AF] mt-1 text-sm font-medium">Your curated list of saved tech & food events.</p>
+        <div className="space-y-12">
+            <div>
+                <h1 className="mb-2">Your Favorites</h1>
+                <p className="text-[#9CA3AF] text-lg font-medium">Tracked opportunities and high-value signals you've bookmarked.</p>
             </div>
 
-            <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-8">
+                <div className="flex items-center gap-4">
+                    <h2 className="m-0">Bookmarked Signals</h2>
+                    <div className="h-px flex-1 bg-[#1F2937]"></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {events.length === 0 ? (
-                        <div className="col-span-full bg-[#111827] border border-[#1F2937] rounded-2xl p-10 text-center">
-                            <p className="text-[#9CA3AF]">No saved events found.</p>
-                            <p className="text-sm text-[#9CA3AF] mt-2">Browse the Dashboard or Search to bookmark opportunities.</p>
+                        <div className="col-span-full py-20 premium-card flex flex-col items-center justify-center text-center">
+                            <div className="w-16 h-16 rounded-full bg-[#1F2937] flex items-center justify-center mb-6">
+                                <svg className="w-8 h-8 text-[#4B5563]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 0 00.951-.69l1.519-4.674z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold mb-2">No bookmarks yet</h3>
+                            <p className="text-[#9CA3AF] max-w-sm mb-8">Your tracked events will appear here for quick access and monitoring.</p>
+                            <button className="btn-premium btn-primary" onClick={() => window.location.href='/search'}>Explore Opportunities</button>
                         </div>
                     ) : (
                         events.map((ev) => (
-                            <div key={ev.id} className="bg-[#111827] border border-[#1F2937] rounded-2xl p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 ease-in-out flex flex-col h-full group relative overflow-hidden">
-                                <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-[#6366F1]/20 to-transparent left-0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                
+                            <div key={ev.id} className="premium-card group h-full flex flex-col">
                                 <div className="flex justify-between items-start mb-4">
-                                    <h3 className="text-[17px] font-bold text-[#F3F4F6] leading-tight pr-4 group-hover:text-[#6366F1] transition-colors">{ev.title}</h3>
-                                    <button onClick={() => handleUnsave(ev.id)} className="text-[#6366F1] hover:text-[#4F46E5] transition-colors shrink-0" title="Remove Bookmark">
-                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                                    <h3 className="text-lg font-bold leading-snug group-hover:text-[#6366F1] transition-colors">{ev.title}</h3>
+                                    <button 
+                                        onClick={() => handleUnsave(ev.id)} 
+                                        className="transition-colors shrink-0 p-1 rounded-md hover:bg-[#1F2937] text-[#6366F1]"
+                                        title="Remove from favorites"
+                                    >
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
                                     </button>
                                 </div>
                                 
                                 <div className="flex items-center gap-2 mb-4">
-                                    <span className="px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full bg-[#1F2937] text-[#9CA3AF] border border-[#374151]">
+                                    <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest bg-[#1F2937] px-2 py-0.5 rounded">
                                         {ev.city}
                                     </span>
                                 </div>
                                 
-                                <p className="text-[#9CA3AF] text-sm mb-5 line-clamp-2 leading-relaxed">{ev.description || "Open to see opportunities..."}</p>
+                                <p className="text-[#9CA3AF] text-sm mb-6 line-clamp-2 leading-relaxed flex-1">
+                                    {ev.description || "Synthesizing event opportunities..."}
+                                </p>
                                 
                                 <div className="flex flex-wrap gap-2 mb-6">
-                                    {ev.food_score > 0 && (
-                                        <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md bg-[#1F2937]/50 text-[#F3F4F6] border border-[#1F2937]">
-                                            <span className="text-[10px]">🍕</span> {Math.round(ev.food_likelihood ? ev.food_likelihood * 100 : 80)}% Food Likelihood
-                                        </span>
+                                    {ev.food_likelihood > 0.5 && (
+                                        <div className="badge-premium bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20 flex items-center gap-1">
+                                            <span>🍕</span> {Math.round(ev.food_likelihood * 100)}% Food
+                                        </div>
                                     )}
-                                    <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md bg-[#1F2937]/50 text-[#F3F4F6] border border-[#1F2937]">
-                                        <span className="text-[#6366F1] text-[10px]">⭐</span> {Math.round(ev.total_score || ev.relevance_score)} Score
-                                    </span>
+                                    <div className="badge-premium bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20 flex items-center gap-1">
+                                        <span>⭐</span> {Math.round(ev.total_score || 85)} Score
+                                    </div>
                                 </div>
                                 
-                                <div className="mt-auto pt-4 border-t border-[#1F2937] flex justify-between items-center w-full">
-                                    <span className="text-[11px] uppercase tracking-wider text-[#9CA3AF] font-bold">{ev.source}</span>
-                                    <a href={ev.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-[#6366F1] hover:text-[#4F46E5] flex items-center gap-1 tracking-wide">
-                                        View <span aria-hidden="true">&rarr;</span>
+                                <div className="pt-4 border-t border-[#1F2937] flex justify-between items-center">
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] uppercase tracking-wider text-[#4B5563] font-black">{ev.source || 'Aggregated'}</span>
+                                        <span className="text-[10px] text-[#6B7280]">Saved recently</span>
+                                    </div>
+                                    <a href={ev.url} target="_blank" rel="noopener noreferrer" className="btn-premium btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5">
+                                        Explore <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                     </a>
                                 </div>
                             </div>

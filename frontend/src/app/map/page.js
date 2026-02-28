@@ -56,34 +56,32 @@ export default function MapPage() {
     }, [events]);
 
     return (
-        <div className="page h-full relative" style={{ overflowY: 'auto' }}>
-            <div className="mb-10">
-                <h1 className="text-3xl font-bold text-[#F3F4F6] tracking-tight m-0">Event Map</h1>
-                <p className="text-[#9CA3AF] mt-1 text-sm font-medium">Geospatial overview of active tech events.</p>
+        <div className="space-y-12">
+            <div>
+                <h1 className="mb-2">Geospatial Discovery</h1>
+                <p className="text-[#9CA3AF] text-lg font-medium">Real-time visualization of tech and food signals across the global network.</p>
             </div>
             
-            <div
-                ref={mapRef}
-                style={{
-                    height: "65vh", 
-                    borderRadius: 16,
-                    border: "1px solid #1F2937", 
-                    overflow: "hidden"
-                }}
-                className="z-10 relative bg-[#111827] shadow-sm"
-            />
+            <div className="premium-card p-0 overflow-hidden shadow-2xl">
+                <div
+                    ref={mapRef}
+                    className="z-10 relative bg-[#0B0F1A]"
+                    style={{ height: "65vh" }}
+                />
+            </div>
             
-            <div className="flex items-center gap-4 mt-6 text-sm text-[#9CA3AF] bg-[#111827] border border-[#1F2937] p-4 rounded-2xl inline-flex shadow-sm font-medium">
-                <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]"></div> 
-                    <span>Food Events</span>
+            <div className="premium-card py-4 inline-flex items-center gap-6">
+                <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#F59E0B] shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div> 
+                    <span className="text-xs font-bold text-[#9CA3AF] uppercase tracking-widest">Food Drops</span>
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#6366F1]"></div> 
-                    <span>Other Events</span>
+                <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#6366F1] shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div> 
+                    <span className="text-xs font-bold text-[#9CA3AF] uppercase tracking-widest">Tech Signals</span>
                 </div>
-                <div className="pl-4 border-l border-[#1F2937]">
-                    <strong className="text-[#F3F4F6]">{events.filter(e => e.lat).length}</strong> events plotted
+                <div className="pl-6 border-l border-[#1F2937]">
+                    <span className="text-xs font-bold text-[#6B7280] uppercase tracking-widest mr-2">Status</span>
+                    <strong className="text-[#F3F4F6] font-mono">{events.filter(e => e.lat).length}</strong> Plotted
                 </div>
             </div>
         </div>

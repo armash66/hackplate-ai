@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { getOverview, searchEvents, triggerIngest } from "../lib/api";
+import api, { getOverview, searchEvents, triggerIngest } from "../lib/api";
 
 export default function Home() {
     const { getToken } = useAuth();
@@ -84,97 +84,110 @@ export default function Home() {
     }
 
     return (
-        <div className="page h-full relative" style={{ overflowY: 'auto' }}>
+        <div className="space-y-12">
             {/* HERO SECTION */}
-            <div className="flex justify-between items-center mb-10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-[#F3F4F6] tracking-tight m-0">Opportunity Radar</h1>
-                    <p className="text-[#9CA3AF] mt-1 text-sm font-medium">AI-ranked tech events tailored to your location.</p>
+                    <h1 className="mb-2">Opportunity Radar</h1>
+                    <p className="text-[#9CA3AF] text-lg font-medium max-w-2xl">
+                        AI-ranked tech events and local drops tailored to your discovery scope.
+                    </p>
                 </div>
                 <button 
-                    className="bg-[#111827] hover:bg-[#1F2937] text-[#F3F4F6] font-medium py-2.5 px-6 rounded-full border border-[#1F2937] transition-all flex items-center gap-2 text-sm shadow-sm" 
+                    className="btn-premium btn-primary px-8" 
                     onClick={handleIngest} 
                     disabled={ingesting}
                 >
                     {ingesting ? (
-                        <><svg className="animate-spin h-3.5 w-3.5 text-[#9CA3AF]" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Scanning...</>
+                        <><svg className="animate-spin h-3.5 w-3.5 text-white/50" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Scanning...</>
                     ) : (
-                        <><svg className="w-3.5 h-3.5 text-[#6366F1]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Run Scan</>
+                        <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Run Radar Scan</>
                     )}
                 </button>
             </div>
 
             {/* STATS TILES */}
             {overview && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-                    <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-5 shadow-sm">
-                        <div className="text-3xl font-bold text-[#F3F4F6] tracking-tight">{overview.total_events}</div>
-                        <h3 className="text-xs font-semibold text-[#9CA3AF] mt-1">Events Near You</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div className="premium-card py-6 flex flex-col items-center justify-center">
+                        <div className="text-4xl font-bold tracking-tighter mb-1 font-mono">{overview.total_events}</div>
+                        <h3 className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280] font-bold">Total Signals</h3>
                     </div>
-                    <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-5 shadow-sm">
-                        <div className="text-3xl font-bold text-[#F3F4F6] tracking-tight">{overview.food_events}</div>
-                        <h3 className="text-xs font-semibold text-[#9CA3AF] mt-1 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span> Avg Food Confidence
-                        </h3>
+                    <div className="premium-card py-6 flex flex-col items-center justify-center">
+                        <div className="text-4xl font-bold tracking-tighter mb-1 font-mono text-[#F59E0B]">{overview.food_events}</div>
+                        <h3 className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280] font-bold">Food Drops</h3>
                     </div>
-                    <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-5 shadow-sm">
-                        <div className="text-3xl font-bold text-[#F3F4F6] tracking-tight">{overview.total_sources}</div>
-                        <h3 className="text-xs font-semibold text-[#9CA3AF] mt-1">Active Sources</h3>
+                    <div className="premium-card py-6 flex flex-col items-center justify-center">
+                        <div className="text-4xl font-bold tracking-tighter mb-1 font-mono">{overview.total_sources}</div>
+                        <h3 className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280] font-bold">Active Sources</h3>
                     </div>
-                    <div className="bg-[#111827] border border-[#1F2937] rounded-2xl p-5 shadow-sm">
-                        <div className="text-3xl font-bold text-[#F3F4F6] tracking-tight truncate">{overview.top_city}</div>
-                        <h3 className="text-xs font-semibold text-[#9CA3AF] mt-1">Trending City</h3>
+                    <div className="premium-card py-6 flex flex-col items-center justify-center relative overflow-hidden">
+                        <div className="text-2xl font-bold tracking-tight mb-1 truncate max-w-full px-2">{overview.top_city}</div>
+                        <h3 className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280] font-bold">Peak Location</h3>
                     </div>
                 </div>
             )}
 
-            {/* EVENT GRID (No specific Layout Sidebars) */}
-            <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* MAIN FEED */}
+            <div className="space-y-8">
+                <div className="flex items-center gap-4">
+                    <h2 className="m-0">Recent Matches</h2>
+                    <div className="h-px flex-1 bg-[#1F2937]"></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {recentEvents.length === 0 ? (
-                        <div className="col-span-full bg-[#111827] border border-[#1F2937] rounded-2xl p-10 text-center">
-                            <p className="text-[#9CA3AF]">No events found in your radar area.</p>
-                            <p className="text-sm text-[#9CA3AF] mt-2">Adjust your Saved Search or run the Scraper.</p>
+                        <div className="col-span-full py-20 premium-card flex flex-col items-center justify-center text-center">
+                            <div className="w-16 h-16 rounded-full bg-[#1F2937] flex items-center justify-center mb-6">
+                                <svg className="w-8 h-8 text-[#4B5563]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold mb-2">No active signals found</h3>
+                            <p className="text-[#9CA3AF] max-w-sm mb-8">Adjust your radar scope in settings or run a fresh scan to populate your feed.</p>
+                            <button className="btn-premium btn-primary" onClick={() => window.location.href='/settings'}>Adjust Radar Range</button>
                         </div>
                     ) : (
                         recentEvents.map((ev) => (
-                            <div key={ev.id} className="bg-[#111827] border border-[#1F2937] rounded-2xl p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 ease-in-out flex flex-col h-full group relative overflow-hidden">
-                                <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-[#6366F1]/20 to-transparent left-0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                
+                            <div key={ev.id} className="premium-card group h-full flex flex-col">
                                 <div className="flex justify-between items-start mb-4">
-                                    <h3 className="text-[17px] font-bold text-[#F3F4F6] leading-tight pr-4 group-hover:text-[#6366F1] transition-colors">{ev.title}</h3>
+                                    <h3 className="text-lg font-bold leading-snug group-hover:text-[#6366F1] transition-colors">{ev.title}</h3>
                                     <button 
                                         onClick={() => toggleSaveEvent(ev.id)} 
-                                        className={`${savedIds.has(ev.id) ? 'text-[#6366F1]' : 'text-[#9CA3AF] hover:text-[#F3F4F6]'} cursor-pointer transition-colors shrink-0`}
-                                        title={savedIds.has(ev.id) ? "Remove Bookmark" : "Bookmark Event"}
+                                        className={`transition-colors shrink-0 p-1 rounded-md hover:bg-[#1F2937] ${savedIds.has(ev.id) ? 'text-[#6366F1]' : 'text-[#4B5563] hover:text-[#F3F4F6]'}`}
                                     >
-                                        <svg className="w-5 h-5" fill={savedIds.has(ev.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                                        <svg className="w-5 h-5" fill={savedIds.has(ev.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
                                     </button>
                                 </div>
                                 
                                 <div className="flex items-center gap-2 mb-4">
-                                    <span className="px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-full bg-[#1F2937] text-[#9CA3AF] border border-[#374151]">
-                                        {ev.city} • Local Match
+                                    <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest bg-[#1F2937] px-2 py-0.5 rounded">
+                                        {ev.city}
                                     </span>
                                 </div>
                                 
-                                <p className="text-[#9CA3AF] text-sm mb-5 line-clamp-2 leading-relaxed">{ev.description || "Open to see opportunities..."}</p>
+                                <p className="text-[#9CA3AF] text-sm mb-6 line-clamp-2 leading-relaxed flex-1">
+                                    {ev.description || "Synthesizing event opportunities..."}
+                                </p>
                                 
                                 <div className="flex flex-wrap gap-2 mb-6">
                                     {ev.food_score > 0 && (
-                                        <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md bg-[#1F2937]/50 text-[#F3F4F6] border border-[#1F2937]">
-                                            <span className="text-[10px]">🍕</span> {Math.round(ev.food_likelihood ? ev.food_likelihood * 100 : 80)}% Food Likelihood
-                                        </span>
+                                        <div className="badge-premium bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20 flex items-center gap-1">
+                                            <span>🍕</span> {Math.round(ev.food_likelihood * 100 || 80)}% Food
+                                        </div>
                                     )}
-                                    <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md bg-[#1F2937]/50 text-[#F3F4F6] border border-[#1F2937]">
-                                        <span className="text-[#6366F1] text-[10px]">⭐</span> {Math.round(ev.total_score || ev.relevance_score)} Score
-                                    </span>
+                                    <div className="badge-premium bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20 flex items-center gap-1">
+                                        <span>⭐</span> {Math.round(ev.total_score || ev.relevance_score)} Score
+                                    </div>
                                 </div>
                                 
-                                <div className="mt-auto pt-4 border-t border-[#1F2937] flex justify-between items-center w-full">
-                                    <span className="text-[11px] uppercase tracking-wider text-[#9CA3AF] font-bold">{ev.source}</span>
-                                    <a href={ev.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-[#6366F1] hover:text-[#4F46E5] flex items-center gap-1 tracking-wide">
-                                        View <span aria-hidden="true">&rarr;</span>
+                                <div className="pt-4 border-t border-[#1F2937] flex justify-between items-center">
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] uppercase tracking-wider text-[#4B5563] font-black">{ev.source}</span>
+                                        <span className="text-[10px] text-[#6B7280]">{ev.created_at ? new Date(ev.created_at).toLocaleDateString() : 'Active Now'}</span>
+                                    </div>
+                                    <a href={ev.url} target="_blank" rel="noopener noreferrer" className="btn-premium btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5">
+                                        Explore <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                     </a>
                                 </div>
                             </div>
