@@ -8,6 +8,7 @@ python-dotenv
 # Database
 sqlalchemy
 psycopg2-binary
+pg8000
 
 # Auth
 passlib[bcrypt]
