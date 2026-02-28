@@ -13,4 +13,6 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.get("/me", response_model=schemas.UserResponse)
 def me(user: models.User = Depends(get_current_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     return user

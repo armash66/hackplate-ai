@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, HTTPException
 from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..database import get_db
@@ -12,6 +12,8 @@ def list_rules(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
 ):
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     return db.query(models.NotificationRule).filter(
         models.NotificationRule.user_id == user.id
     ).all()
@@ -23,6 +25,8 @@ def create_rule(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
 ):
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     rule = models.NotificationRule(
         user_id=user.id,
         location=data.location,
@@ -43,6 +47,8 @@ def delete_rule(
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
 ):
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     rule = db.query(models.NotificationRule).filter(
         models.NotificationRule.id == rule_id,
         models.NotificationRule.user_id == user.id,

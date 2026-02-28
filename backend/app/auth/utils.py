@@ -19,9 +19,15 @@ clerk = Clerk(bearer_auth=settings.CLERK_SECRET_KEY)
 def get_current_user(
     request: Request,
     db: Session = Depends(get_db),
-) -> models.User:
+) -> models.User | None:
     from clerk_backend_api.security import AuthenticateRequestOptions
     
+    # If no authorization header is present at all, allow the request to proceed as anonymous
+    # Endpoints that *require* auth should check if `user is None` inside the endpoint.
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return None
+
     try:
         req_state = clerk.authenticate_request(
             request,
@@ -29,18 +35,10 @@ def get_current_user(
         )
     except Exception as e:
         print(f"Clerk Auth Exception: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Auth error: {e}",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        return None
 
     if not req_state.is_signed_in:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing authentication token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        return None
         
     clerk_id = req_state.payload.get("sub")
     email = req_state.payload.get("email") # Clerk JWT can include this if configured, or we can fetch it. Or we just get it if it's there.

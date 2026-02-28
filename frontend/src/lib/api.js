@@ -10,20 +10,20 @@ const api = axios.create({
 export default api;
 
 // --- Events ---
-export const searchEvents = (params) => api.get("/events/", { params });
-export const getEvent = (id) => api.get(`/events/${id}`);
-export const saveEvent = (id) => api.post(`/events/${id}/save`);
-export const unsaveEvent = (id) => api.delete(`/events/${id}/save`);
-export const getSavedEvents = () => api.get("/events/saved/list");
+export const searchEvents = (params, config = {}) => api.get("/events/", { params, ...config });
+export const getEvent = (id, config = {}) => api.get(`/events/${id}`, config);
+export const saveEvent = (id, config = {}) => api.post(`/events/${id}/save`, {}, config);
+export const unsaveEvent = (id, config = {}) => api.delete(`/events/${id}/save`, config);
+export const getSavedEvents = (config = {}) => api.get("/events/saved/list", config);
 
 // --- Notifications ---
-export const getRules = () => api.get("/notifications/rules");
-export const createRule = (data) => api.post("/notifications/rules", data);
-export const deleteRule = (id) => api.delete(`/notifications/rules/${id}`);
+export const getRules = (config = {}) => api.get("/notifications/rules", config);
+export const createRule = (data, config = {}) => api.post("/notifications/rules", data, config);
+export const deleteRule = (id, config = {}) => api.delete(`/notifications/rules/${id}`, config);
 
 // --- Analytics ---
-export const getOverview = () => api.get("/analytics/overview");
-export const getTrends = () => api.get("/analytics/trends");
+export const getOverview = (config = {}) => api.get("/analytics/overview", config);
+export const getTrends = (config = {}) => api.get("/analytics/trends", config);
 
 // --- Ingestion ---
 export const triggerIngest = (token, limit = 10) =>

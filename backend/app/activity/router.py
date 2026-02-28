@@ -31,6 +31,8 @@ def get_user_activity_overview(
     user: models.User = Depends(get_current_user),
 ):
     """Returns a unified overview of the user's saved searches, preferences, and stats."""
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     
     saved_search = db.query(models.SavedSearch).filter(models.SavedSearch.user_id == user.id).first()
     prefs = db.query(models.NotificationPreference).filter(models.NotificationPreference.user_id == user.id).first()
@@ -60,6 +62,8 @@ def upsert_saved_search(
     user: models.User = Depends(get_current_user),
 ):
     """Creates or updates the user's primary saved search area."""
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     saved = db.query(models.SavedSearch).filter(models.SavedSearch.user_id == user.id).first()
     
     if saved:
@@ -90,6 +94,8 @@ def update_notification_preferences(
     user: models.User = Depends(get_current_user),
 ):
     """Updates the user's notification preferences."""
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     prefs = db.query(models.NotificationPreference).filter(models.NotificationPreference.user_id == user.id).first()
     
     if not prefs:

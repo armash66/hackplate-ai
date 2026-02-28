@@ -15,9 +15,12 @@ export default function Home() {
 
     async function loadData() {
         try {
+            const token = await getToken();
+            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+            
             const [ov, ev] = await Promise.all([
-                getOverview(),
-                searchEvents({ food_only: true, per_page: 6 }),
+                getOverview(config),
+                searchEvents({ food_only: true, per_page: 6 }, config),
             ]);
             setOverview(ov.data);
             setRecentEvents(ev.data);
