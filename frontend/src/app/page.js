@@ -159,7 +159,7 @@ export default function Home() {
                             {/* Fake CSS Charts to mitigate package issues while maintaining UI */}
                             <div>
                                 <div className="flex justify-between text-xs text-gray-400 mb-1">
-                                    <span>High Confidence (>80%)</span>
+                                    <span>High Confidence (&gt;80%)</span>
                                     <span>45%</span>
                                 </div>
                                 <div className="w-full bg-gray-800 rounded-full h-2">
