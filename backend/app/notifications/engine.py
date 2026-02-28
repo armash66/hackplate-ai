@@ -12,7 +12,10 @@ def match_and_notify(db: Session, new_events: list[models.Event]):
     2. NotificationPreferences (global telegram/email toggles from Settings)
     """
     if not new_events:
+        print("  [notify] No new events to notify about")
         return
+
+    print(f"  [notify] Processing {len(new_events)} new events for notifications")
 
     # ── 1. Rule-based notifications (legacy per-rule system) ──
     rules = db.query(models.NotificationRule).all()
@@ -33,7 +36,9 @@ def match_and_notify(db: Session, new_events: list[models.Event]):
 
     for pref in prefs:
         if not pref.telegram_enabled and not pref.email_enabled:
+            print(f"  [notify] User {pref.user_id}: both channels disabled, skipping")
             continue
+        print(f"  [notify] User {pref.user_id}: telegram={pref.telegram_enabled}, email={pref.email_enabled}")
 
         # Get user's saved search to filter events by location
         saved_search = (

@@ -36,7 +36,9 @@ def run_ingestion(db: Session, limit: int = 10, sources: list[str] | None = None
 
     print(f"  [ingestion] Total raw events: {len(raw_events)}")
 
-    processed_events = []
+    new_events = []
+    updated_count = 0
+
     for raw in raw_events:
         # Intelligence
         food_detected, keywords, food_score = detect_food(raw.description)
@@ -46,7 +48,7 @@ def run_ingestion(db: Session, limit: int = 10, sources: list[str] | None = None
         
         # New V4 Scoring System
         total_score = food_score + relevance_score
-        food_confidence = 1.0 if food_detected else 0.0 # Calculate based on keywords next time
+        food_confidence = 1.0 if food_detected else 0.0
 
         lat, lon = geocode(city)
 
@@ -66,7 +68,7 @@ def run_ingestion(db: Session, limit: int = 10, sources: list[str] | None = None
             existing.food_confidence = food_confidence
             existing.keywords = keywords
             existing.start_date = raw.start_date
-            processed_events.append(existing)
+            updated_count += 1
         else:
             print(f"  [new] Inserting: {raw.title}")
             event = models.Event(
@@ -86,8 +88,8 @@ def run_ingestion(db: Session, limit: int = 10, sources: list[str] | None = None
                 start_date=raw.start_date,
             )
             db.add(event)
-            processed_events.append(event)
+            new_events.append(event)
 
     db.commit()
-    print(f"  [ingestion] Processed {len(processed_events)} events.")
-    return processed_events
+    print(f"  [ingestion] {len(new_events)} new, {updated_count} updated.")
+    return new_events
