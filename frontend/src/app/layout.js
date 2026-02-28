@@ -48,17 +48,7 @@ export default function RootLayout({ children }) {
               </Link>
               <nav style={{ display: 'flex', gap: 4 }}>
                 {links.map(l => (
-                  <Link key={l.href} href={l.href} style={{
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: '#737373',
-                    padding: '6px 12px',
-                    borderRadius: 6,
-                    transition: 'color 150ms, background 150ms',
-                  }}
-                    onMouseEnter={e => { e.target.style.color = '#1A1A1A'; e.target.style.background = '#F5F5F4'; }}
-                    onMouseLeave={e => { e.target.style.color = '#737373'; e.target.style.background = 'transparent'; }}
-                  >
+                  <Link key={l.href} href={l.href} className="navlink">
                     {l.label}
                   </Link>
                 ))}

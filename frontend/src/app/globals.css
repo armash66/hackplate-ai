@@ -26,6 +26,20 @@ a {
   background: #E0DFFE;
 }
 
+.navlink {
+  font-size: 13px;
+  font-weight: 500;
+  color: #737373;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: color 150ms, background 150ms;
+}
+
+.navlink:hover {
+  color: #1A1A1A;
+  background: #F5F5F4;
+}
+
 input,
 select,
 button {
