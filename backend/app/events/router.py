@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from uuid import UUID
 from .. import models, schemas
 from ..database import get_db
 from ..auth.utils import get_current_user
@@ -19,14 +21,15 @@ def list_events(
     page: int = 1,
     per_page: int = 20,
     db: Session = Depends(get_db),
+    user: models.User | None = Depends(get_current_user),
 ):
-    """Search events with filters. No auth required."""
+    """Search events with filters. If authenticated, user preferences are applied automatically."""
     return search_events(db, location, radius_km, min_score, source,
-                         event_type, food_only, page, per_page)
+                         event_type, food_only, page, per_page, user_id=user.id if user else None)
 
 
 @router.get("/{event_id}", response_model=schemas.EventResponse)
-def get_event(event_id: int, db: Session = Depends(get_db)):
+def get_event(event_id: UUID, db: Session = Depends(get_db)):
     event = db.query(models.Event).filter(models.Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -35,7 +38,7 @@ def get_event(event_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{event_id}/save", status_code=201)
 def save_event(
-    event_id: int,
+    event_id: UUID,
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
 ):
@@ -58,7 +61,7 @@ def save_event(
 
 @router.delete("/{event_id}/save", status_code=200)
 def unsave_event(
-    event_id: int,
+    event_id: UUID,
     db: Session = Depends(get_db),
     user: models.User = Depends(get_current_user),
 ):

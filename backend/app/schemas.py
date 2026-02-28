@@ -2,10 +2,13 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
 
+from uuid import UUID
+
 # --- Auth ---
 class UserResponse(BaseModel):
-    id: int
+    id: UUID
     clerk_id: str
+    email: str | None
     created_at: datetime
 
     class Config:
@@ -14,7 +17,7 @@ class UserResponse(BaseModel):
 
 # --- Events ---
 class EventResponse(BaseModel):
-    id: int
+    id: UUID
     title: str
     description: str
     url: str
@@ -24,6 +27,8 @@ class EventResponse(BaseModel):
     lon: float | None
     food_score: int
     relevance_score: int
+    total_score: int
+    food_confidence: float
     source: str
     keywords: list[str]
     start_date: str | None
@@ -54,7 +59,7 @@ class NotificationRuleCreate(BaseModel):
 
 
 class NotificationRuleResponse(BaseModel):
-    id: int
+    id: UUID
     location: str
     radius_km: int
     min_score: int
