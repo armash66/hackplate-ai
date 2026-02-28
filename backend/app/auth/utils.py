@@ -43,14 +43,23 @@ def get_current_user(
         )
         
     clerk_id = req_state.payload.get("sub")
+    email = req_state.payload.get("email") # Clerk JWT can include this if configured, or we can fetch it. Or we just get it if it's there.
+    # Note: By default Clerk session JWTs might not include email unless added to session token template.
+    # For now, we will try to extract it from the payload if it was injected. 
+    # If not, it will be None, which is fine since email is nullable=True in DB.
 
     # Find the user by their unique Clerk ID in our local database
     user = db.query(models.User).filter(models.User.clerk_id == clerk_id).first()
     
     # Auto-provision the user if this is their first time accessing the backend
     if not user:
-        user = models.User(clerk_id=clerk_id)
+        user = models.User(clerk_id=clerk_id, email=email)
         db.add(user)
+        db.commit()
+        db.refresh(user)
+    elif email and user.email != email:
+        # Update email if it changed or was previously null
+        user.email = email
         db.commit()
         db.refresh(user)
         
