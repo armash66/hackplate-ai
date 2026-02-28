@@ -1,15 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import api from "../../lib/api";
 
 export default function SettingsPage() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
+  const { user: clerkUser } = useUser();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [radius, setRadius] = useState(50);
   const [minScore, setMinScore] = useState(0);
   const [telegram, setTelegram] = useState(false);
+  const [emailAlerts, setEmailAlerts] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -19,7 +21,10 @@ export default function SettingsPage() {
         const r = await api.get("/activity/overview", { headers: { Authorization: `Bearer ${token}` } });
         setData(r.data);
         if (r.data.saved_search) { setRadius(r.data.saved_search.radius_km); setMinScore(r.data.saved_search.min_score); }
-        if (r.data.notification_preferences) setTelegram(r.data.notification_preferences.telegram_enabled);
+        if (r.data.notification_preferences) {
+          setTelegram(r.data.notification_preferences.telegram_enabled);
+          setEmailAlerts(r.data.notification_preferences.email_enabled);
+        }
       } catch (_) { }
       setLoading(false);
     })();
@@ -32,6 +37,8 @@ export default function SettingsPage() {
       <p style={{ color: '#737373' }}>Sign in to access your settings.</p>
     </div>
   );
+
+  const email = clerkUser?.primaryEmailAddress?.emailAddress || data?.email || "—";
 
   async function saveField(endpoint, body) {
     try {
@@ -54,7 +61,7 @@ export default function SettingsPage() {
 
       {/* Account */}
       <Section title="Account">
-        <Row label="Email" value={data?.email || "—"} />
+        <Row label="Email" value={email} />
         <Row label="Member since" value={data?.joined_at ? new Date(data.joined_at).toLocaleDateString() : "—"} />
         <Row label="Saved events" value={data?.total_favorites || 0} last />
       </Section>
@@ -84,27 +91,23 @@ export default function SettingsPage() {
 
       {/* Notifications */}
       <Section title="Notifications">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>
             <p style={{ fontSize: 14, fontWeight: 500 }}>Telegram alerts</p>
-            <p style={{ fontSize: 13, color: '#A3A3A3', marginTop: 2 }}>Get notified about new events.</p>
+            <p style={{ fontSize: 13, color: '#A3A3A3', marginTop: 2 }}>Get notified via Telegram when new events match your criteria.</p>
           </div>
-          <div onClick={() => setTelegram(!telegram)} style={{
-            width: 40, height: 22, borderRadius: 11, cursor: 'pointer',
-            background: telegram ? '#5B5BD6' : '#E5E5E5',
-            transition: 'background 150ms', position: 'relative',
-          }}>
-            <div style={{
-              width: 18, height: 18, borderRadius: '50%', background: '#FFF',
-              position: 'absolute', top: 2,
-              left: telegram ? 20 : 2,
-              transition: 'left 150ms',
-            }} />
-          </div>
+          <Toggle value={telegram} onChange={setTelegram} />
         </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 500 }}>Email alerts</p>
+            <p style={{ fontSize: 13, color: '#A3A3A3', marginTop: 2 }}>Receive email notifications at {email}.</p>
+          </div>
+          <Toggle value={emailAlerts} onChange={setEmailAlerts} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
           <button onClick={() => saveField("/activity/preferences", {
-            frequency: "instant", telegram_enabled: telegram, email_enabled: false
+            frequency: "instant", telegram_enabled: telegram, email_enabled: emailAlerts
           })} style={{
             background: '#5B5BD6', color: '#FFF', border: 'none',
             borderRadius: 7, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
@@ -133,6 +136,23 @@ function Row({ label, value, last }) {
     }}>
       <span style={{ color: '#737373' }}>{label}</span>
       <span style={{ fontWeight: 500 }}>{value}</span>
+    </div>
+  );
+}
+
+function Toggle({ value, onChange }) {
+  return (
+    <div onClick={() => onChange(!value)} style={{
+      width: 40, height: 22, borderRadius: 11, cursor: 'pointer',
+      background: value ? '#5B5BD6' : '#E5E5E5',
+      transition: 'background 150ms', position: 'relative', flexShrink: 0,
+    }}>
+      <div style={{
+        width: 18, height: 18, borderRadius: '50%', background: '#FFF',
+        position: 'absolute', top: 2,
+        left: value ? 20 : 2,
+        transition: 'left 150ms',
+      }} />
     </div>
   );
 }

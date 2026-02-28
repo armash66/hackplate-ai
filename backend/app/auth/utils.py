@@ -10,11 +10,26 @@ from .. import models
 
 settings = get_settings()
 
-# We only need the token parsing from OAuth2 (FastAPI will grab the Bearer token)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="placeholder")
 
-# Initialize the Clerk SDK
 clerk = Clerk(bearer_auth=settings.CLERK_SECRET_KEY)
+
+
+def _fetch_clerk_email(clerk_user_id: str) -> str | None:
+    """Fetch the user's primary email from Clerk API."""
+    try:
+        user_data = clerk.users.get(user_id=clerk_user_id)
+        if user_data and user_data.email_addresses:
+            # Find the primary email
+            for addr in user_data.email_addresses:
+                if addr.id == user_data.primary_email_address_id:
+                    return addr.email_address
+            # Fallback: return first email
+            return user_data.email_addresses[0].email_address
+    except Exception as e:
+        print(f"  [clerk] Failed to fetch email for {clerk_user_id}: {e}")
+    return None
+
 
 def get_current_user(
     request: Request,
@@ -22,8 +37,6 @@ def get_current_user(
 ) -> models.User | None:
     from clerk_backend_api.security import AuthenticateRequestOptions
     
-    # If no authorization header is present at all, allow the request to proceed as anonymous
-    # Endpoints that *require* auth should check if `user is None` inside the endpoint.
     auth_header = request.headers.get("Authorization")
     if not auth_header:
         return None
@@ -41,24 +54,25 @@ def get_current_user(
         return None
         
     clerk_id = req_state.payload.get("sub")
-    email = req_state.payload.get("email") # Clerk JWT can include this if configured, or we can fetch it. Or we just get it if it's there.
-    # Note: By default Clerk session JWTs might not include email unless added to session token template.
-    # For now, we will try to extract it from the payload if it was injected. 
-    # If not, it will be None, which is fine since email is nullable=True in DB.
 
-    # Find the user by their unique Clerk ID in our local database
+    # Find the user by their unique Clerk ID
     user = db.query(models.User).filter(models.User.clerk_id == clerk_id).first()
     
-    # Auto-provision the user if this is their first time accessing the backend
     if not user:
+        # New user — fetch email from Clerk API
+        email = _fetch_clerk_email(clerk_id)
         user = models.User(clerk_id=clerk_id, email=email)
         db.add(user)
         db.commit()
         db.refresh(user)
-    elif email and user.email != email:
-        # Update email if it changed or was previously null
-        user.email = email
-        db.commit()
-        db.refresh(user)
+        print(f"  [auth] New user provisioned: {email}")
+    elif not user.email:
+        # Existing user missing email — fetch it
+        email = _fetch_clerk_email(clerk_id)
+        if email:
+            user.email = email
+            db.commit()
+            db.refresh(user)
+            print(f"  [auth] Email updated for user: {email}")
         
     return user
