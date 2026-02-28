@@ -4,186 +4,171 @@ import { useAuth } from "@clerk/nextjs";
 import api, { searchEvents, saveEvent, unsaveEvent, getSavedEvents } from "../../lib/api";
 
 export default function EventsPage() {
-    const [mounted, setMounted] = useState(false);
-    const [filters, setFilters] = useState({
-        location: "", radius_km: 50, min_score: 0,
-        source: "", event_type: "", food_only: false,
-    });
+    const [ready, setReady] = useState(false);
+    const [query, setQuery] = useState("");
+    const [foodOnly, setFoodOnly] = useState(false);
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [savedIds, setSavedIds] = useState(new Set());
+    const [saved, setSaved] = useState(new Set());
     const { getToken } = useAuth();
 
-    useEffect(() => { setMounted(true); loadSaved(); }, []);
+    useEffect(() => {
+        setReady(true);
+        loadSaved();
+        // Load initial results
+        doSearch();
+    }, []);
 
     async function loadSaved() {
         try {
             const token = await getToken();
             if (token) {
-                const res = await getSavedEvents({ headers: { Authorization: `Bearer ${token}` } });
-                setSavedIds(new Set(res.data.map(e => e.id)));
+                const r = await getSavedEvents({ headers: { Authorization: `Bearer ${token}` } });
+                setSaved(new Set(r.data.map(e => e.id)));
             }
-        } catch (e) { console.error(e); }
+        } catch (_) { }
     }
 
-    if (!mounted) return null;
-
-    async function handleSearch() {
+    async function doSearch() {
         setLoading(true);
         try {
             const token = await getToken();
-            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+            const h = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
             const params = {};
-            if (filters.location) params.location = filters.location;
-            if (filters.radius_km) params.radius_km = filters.radius_km;
-            if (filters.min_score) params.min_score = filters.min_score;
-            if (filters.source) params.source = filters.source;
-            if (filters.event_type) params.event_type = filters.event_type;
-            if (filters.food_only) params.food_only = true;
-            const res = await searchEvents(params, config);
-            setResults(res.data);
-        } catch (e) { console.error(e); }
+            if (query) params.location = query;
+            if (foodOnly) params.food_only = true;
+            const r = await searchEvents(params, h);
+            setResults(r.data);
+        } catch (_) { }
         setLoading(false);
     }
 
     async function toggleSave(id) {
+        const token = await getToken();
+        if (!token) return;
+        const h = { headers: { Authorization: `Bearer ${token}` } };
         try {
-            const token = await getToken();
-            if (!token) return;
-            const config = { headers: { Authorization: `Bearer ${token}` } };
-            if (savedIds.has(id)) {
-                await unsaveEvent(id, config);
-                setSavedIds(p => { const n = new Set(p); n.delete(id); return n; });
+            if (saved.has(id)) {
+                await unsaveEvent(id, h);
+                setSaved(p => { const n = new Set(p); n.delete(id); return n; });
             } else {
-                await saveEvent(id, config);
-                setSavedIds(p => { const n = new Set(p); n.add(id); return n; });
+                await saveEvent(id, h);
+                setSaved(p => { const n = new Set(p); n.add(id); return n; });
             }
-        } catch (err) { console.error(err); }
+        } catch (_) { }
     }
 
+    if (!ready) return null;
+
     return (
-        <div>
-            <div style={{ marginBottom: 24 }}>
-                <h1>Events</h1>
-                <p style={{ color: '#6B7280', fontSize: 15, marginTop: 4 }}>Browse and filter all discovered events.</p>
-            </div>
+        <>
+            <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 8 }}>Events</h1>
+            <p style={{ fontSize: 14, color: '#737373', marginBottom: 28 }}>Browse all discovered hackathons and tech events.</p>
 
-            {/* Filters */}
+            {/* Search */}
             <div style={{
-                background: 'white', border: '1px solid #E5E7EB', borderRadius: 8,
-                padding: 20, marginBottom: 32
+                display: 'flex', gap: 10, marginBottom: 28, alignItems: 'center',
             }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, alignItems: 'end' }}>
-                    <div>
-                        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6B7280', marginBottom: 4 }}>Location</label>
-                        <input className="field" placeholder="e.g. Mumbai" value={filters.location}
-                            onChange={e => setFilters({ ...filters, location: e.target.value })} />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6B7280', marginBottom: 4 }}>Radius (km)</label>
-                        <input className="field" type="number" value={filters.radius_km}
-                            onChange={e => setFilters({ ...filters, radius_km: +e.target.value })} />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6B7280', marginBottom: 4 }}>Min score</label>
-                        <input className="field" type="number" value={filters.min_score}
-                            onChange={e => setFilters({ ...filters, min_score: +e.target.value })} />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6B7280', marginBottom: 4 }}>Source</label>
-                        <select className="field" value={filters.source}
-                            onChange={e => setFilters({ ...filters, source: e.target.value })}>
-                            <option value="">All</option>
-                            <option value="devfolio">Devfolio</option>
-                            <option value="unstop">Unstop</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6B7280', marginBottom: 4 }}>Type</label>
-                        <select className="field" value={filters.event_type}
-                            onChange={e => setFilters({ ...filters, event_type: e.target.value })}>
-                            <option value="">Any</option>
-                            <option value="Online">Online</option>
-                            <option value="Offline">In-Person</option>
-                            <option value="Hybrid">Hybrid</option>
-                        </select>
-                    </div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: '1px solid #F3F4F6' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#6B7280', cursor: 'pointer' }}>
-                        <input type="checkbox" checked={filters.food_only} onChange={e => setFilters({ ...filters, food_only: e.target.checked })}
-                            style={{ accentColor: '#D97706' }} />
-                        Food events only
-                    </label>
-                    <button className="btn btn-primary" onClick={handleSearch} disabled={loading}>
-                        {loading ? "Searching…" : "Search"}
-                    </button>
-                </div>
+                <input
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && doSearch()}
+                    placeholder="Search by city…"
+                    style={{
+                        flex: 1, padding: '10px 14px', fontSize: 14,
+                        border: '1px solid #EBEBEB', borderRadius: 8,
+                        outline: 'none', background: '#FFF', color: '#1A1A1A',
+                    }}
+                />
+                <label style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    fontSize: 13, color: '#737373', cursor: 'pointer',
+                    padding: '8px 14px', border: '1px solid #EBEBEB',
+                    borderRadius: 8, background: foodOnly ? '#FEF3C7' : '#FFF',
+                    transition: 'background 120ms',
+                }}>
+                    <input type="checkbox" checked={foodOnly} onChange={e => setFoodOnly(e.target.checked)}
+                        style={{ display: 'none' }} />
+                    🍕 Food only
+                </label>
+                <button onClick={doSearch} disabled={loading} style={{
+                    background: '#5B5BD6', color: '#FFF', border: 'none',
+                    borderRadius: 8, padding: '10px 20px', fontSize: 13,
+                    fontWeight: 600, cursor: 'pointer',
+                }}>
+                    {loading ? "…" : "Search"}
+                </button>
             </div>
 
-            {/* Results Table */}
-            {results.length === 0 && !loading ? (
+            {/* Results */}
+            {results.length === 0 ? (
                 <div style={{
-                    background: 'white', border: '1px solid #E5E7EB', borderRadius: 8,
-                    padding: '64px 32px', textAlign: 'center'
+                    background: '#FFF', border: '1px solid #EBEBEB', borderRadius: 10,
+                    padding: '48px 24px', textAlign: 'center',
                 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827', marginBottom: 4 }}>No results</div>
-                    <div style={{ fontSize: 14, color: '#9CA3AF' }}>Adjust your filters and search again.</div>
+                    <p style={{ fontWeight: 600, marginBottom: 4 }}>No events found</p>
+                    <p style={{ fontSize: 14, color: '#A3A3A3' }}>Try a different search or run a scan from the dashboard.</p>
                 </div>
             ) : (
-                <div style={{ background: 'white', border: '1px solid #E5E7EB', borderRadius: 8, overflow: 'hidden' }}>
-                    {/* Table header */}
+                <div style={{
+                    background: '#FFF', border: '1px solid #EBEBEB',
+                    borderRadius: 10, overflow: 'hidden',
+                }}>
+                    {/* Header */}
                     <div style={{
-                        display: 'grid', gridTemplateColumns: '1fr 120px 70px 100px 60px',
-                        padding: '10px 24px', background: '#FAFAFA', borderBottom: '1px solid #E5E7EB',
-                        fontSize: 12, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em'
+                        display: 'grid', gridTemplateColumns: '1fr 100px 60px 50px',
+                        padding: '8px 20px', borderBottom: '1px solid #EBEBEB',
+                        fontSize: 11, fontWeight: 600, color: '#A3A3A3',
+                        textTransform: 'uppercase', letterSpacing: '0.06em',
                     }}>
                         <span>Event</span>
                         <span>Location</span>
                         <span>Score</span>
-                        <span>Date</span>
                         <span></span>
                     </div>
 
-                    {results.map((ev, i) => (
-                        <div key={ev.id} style={{
-                            display: 'grid', gridTemplateColumns: '1fr 120px 70px 100px 60px',
-                            padding: '14px 24px', alignItems: 'center',
-                            borderTop: i > 0 ? '1px solid #F3F4F6' : 'none',
-                            transition: 'background 150ms ease', cursor: 'default'
-                        }}
-                            onMouseEnter={e => e.currentTarget.style.background = '#FAFAFA'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'white'}
-                        >
-                            <div style={{ minWidth: 0 }}>
-                                <div style={{ fontSize: 14, fontWeight: 600, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.title}</div>
-                                <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{ev.source}</div>
+                    {results.map((ev, i) => {
+                        const score = Math.round(ev.total_score || ev.relevance_score || 0);
+                        return (
+                            <div key={ev.id} style={{
+                                display: 'grid', gridTemplateColumns: '1fr 100px 60px 50px',
+                                padding: '14px 20px', alignItems: 'center',
+                                borderTop: '1px solid #F5F5F4',
+                                transition: 'background 120ms',
+                            }}
+                                onMouseEnter={e => e.currentTarget.style.background = '#FAFAF9'}
+                                onMouseLeave={e => e.currentTarget.style.background = '#FFF'}
+                            >
+                                <div style={{ minWidth: 0 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <span style={{ fontSize: 14, fontWeight: 600 }}>{ev.title}</span>
+                                        {ev.food_score > 0 && (
+                                            <span style={{ fontSize: 10, fontWeight: 600, color: '#B45309', background: '#FEF3C7', padding: '1px 5px', borderRadius: 3 }}>Food</span>
+                                        )}
+                                    </div>
+                                    <span style={{ fontSize: 12, color: '#A3A3A3' }}>{ev.source} · {ev.event_type || 'Event'}</span>
+                                </div>
+                                <span style={{ fontSize: 13, color: '#737373' }}>{ev.city}</span>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: '#5B5BD6' }}>{score}</span>
+                                <div style={{ display: 'flex', gap: 4 }}>
+                                    <button onClick={() => toggleSave(ev.id)} style={{
+                                        background: 'none', border: 'none', cursor: 'pointer', padding: 2,
+                                        color: saved.has(ev.id) ? '#5B5BD6' : '#D4D4D4',
+                                    }}>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill={saved.has(ev.id) ? "currentColor" : "none"}
+                                            stroke="currentColor" strokeWidth="2"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                                    </button>
+                                    <a href={ev.url} target="_blank" rel="noopener noreferrer" style={{ color: '#D4D4D4', padding: 2 }}>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </a>
+                                </div>
                             </div>
-                            <span style={{ fontSize: 13, color: '#6B7280' }}>{ev.city}</span>
-                            <div>
-                                <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 6px', borderRadius: 4, background: '#EEF2FF', color: '#4F46E5' }}>
-                                    {Math.round(ev.total_score || ev.relevance_score)}
-                                </span>
-                                {ev.food_score > 0 && (
-                                    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 6px', borderRadius: 4, background: '#FFFBEB', color: '#D97706', marginLeft: 4 }}>🍕</span>
-                                )}
-                            </div>
-                            <span style={{ fontSize: 13, color: '#9CA3AF' }}>{ev.created_at ? new Date(ev.created_at).toLocaleDateString() : '—'}</span>
-                            <div style={{ display: 'flex', gap: 4 }}>
-                                <button onClick={() => toggleSave(ev.id)} style={{
-                                    background: 'none', border: 'none', cursor: 'pointer', padding: 2,
-                                    color: savedIds.has(ev.id) ? '#4F46E5' : '#D1D5DB'
-                                }}>
-                                    <svg width="14" height="14" fill={savedIds.has(ev.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
-                                </button>
-                                <a href={ev.url} target="_blank" rel="noopener noreferrer" style={{ padding: 2, color: '#D1D5DB' }}>
-                                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                </a>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
-        </div>
+        </>
     );
 }
