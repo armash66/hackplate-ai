@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { searchEvents } from "../../lib/api";
+import { useAuth } from "@clerk/nextjs";
+import api, { searchEvents, saveEvent, unsaveEvent, getSavedEvents } from "../../lib/api";
 
 export default function SearchPage() {
     const [mounted, setMounted] = useState(false);
@@ -10,16 +11,34 @@ export default function SearchPage() {
     });
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [savedIds, setSavedIds] = useState(new Set());
+    const { getToken } = useAuth();
 
     useEffect(() => {
         setMounted(true);
+        loadSavedEvents();
     }, []);
+
+    async function loadSavedEvents() {
+        try {
+            const token = await getToken();
+            if (token) {
+                const res = await getSavedEvents({ headers: { Authorization: `Bearer ${token}` } });
+                setSavedIds(new Set(res.data.map(e => e.id)));
+            }
+        } catch (e) {
+            console.error("Failed to load saved events:", e);
+        }
+    }
 
     if (!mounted) return null;
 
     async function handleSearch() {
         setLoading(true);
         try {
+            const token = await getToken();
+            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+            
             const params = {};
             if (filters.location) params.location = filters.location;
             if (filters.radius_km) params.radius_km = filters.radius_km;
@@ -27,12 +46,44 @@ export default function SearchPage() {
             if (filters.source) params.source = filters.source;
             if (filters.event_type) params.event_type = filters.event_type;
             if (filters.food_only) params.food_only = true;
-            const res = await searchEvents(params);
+            
+            const res = await searchEvents(params, config);
             setResults(res.data);
         } catch (e) {
             console.error(e);
         }
         setLoading(false);
+    }
+
+    async function toggleSaveEvent(eventId) {
+        try {
+            const token = await getToken();
+            if (!token) {
+                alert("Please log in to save events.");
+                return;
+            }
+            
+            const isSaved = savedIds.has(eventId);
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            
+            if (isSaved) {
+                await unsaveEvent(eventId, config);
+                setSavedIds(prev => {
+                    const next = new Set(prev);
+                    next.delete(eventId);
+                    return next;
+                });
+            } else {
+                await saveEvent(eventId, config);
+                setSavedIds(prev => {
+                    const next = new Set(prev);
+                    next.add(eventId);
+                    return next;
+                });
+            }
+        } catch (err) {
+            console.error("Save toggle failed", err);
+        }
     }
 
     return (
@@ -106,7 +157,13 @@ export default function SearchPage() {
                         
                         <div className="flex justify-between items-start mb-4">
                             <h3 className="text-[17px] font-bold text-[#F3F4F6] leading-tight pr-4 group-hover:text-[#6366F1] transition-colors">{ev.title}</h3>
-                            <svg className="w-5 h-5 text-[#9CA3AF] hover:text-[#F3F4F6] cursor-pointer transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                            <button 
+                                onClick={() => toggleSaveEvent(ev.id)} 
+                                className={`${savedIds.has(ev.id) ? 'text-[#6366F1]' : 'text-[#9CA3AF] hover:text-[#F3F4F6]'} cursor-pointer transition-colors shrink-0`}
+                                title={savedIds.has(ev.id) ? "Remove Bookmark" : "Bookmark Event"}
+                            >
+                                <svg className="w-5 h-5" fill={savedIds.has(ev.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                            </button>
                         </div>
                         
                         <div className="flex items-center gap-2 mb-4">

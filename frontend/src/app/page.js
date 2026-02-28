@@ -8,6 +8,7 @@ export default function Home() {
     const [overview, setOverview] = useState(null);
     const [recentEvents, setRecentEvents] = useState([]);
     const [ingesting, setIngesting] = useState(false);
+    const [savedIds, setSavedIds] = useState(new Set());
 
     useEffect(() => {
         loadData();
@@ -18,12 +19,17 @@ export default function Home() {
             const token = await getToken();
             const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
             
-            const [ov, ev] = await Promise.all([
+            const [ov, ev, savedRes] = await Promise.all([
                 getOverview(config),
                 searchEvents({ food_only: true, per_page: 6 }, config),
+                token ? api.get("/events/saved/list", config).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })
             ]);
             setOverview(ov.data);
             setRecentEvents(ev.data);
+            
+            if (savedRes.data) {
+                setSavedIds(new Set(savedRes.data.map(e => e.id)));
+            }
         } catch (e) {
             console.error("Failed to load dashboard:", e);
         }
@@ -44,6 +50,37 @@ export default function Home() {
             }
         }
         setIngesting(false);
+    }
+
+    async function toggleSaveEvent(eventId) {
+        try {
+            const token = await getToken();
+            if (!token) {
+                alert("Please log in to save events.");
+                return;
+            }
+            
+            const isSaved = savedIds.has(eventId);
+            const config = { headers: { Authorization: `Bearer ${token}` } };
+            
+            if (isSaved) {
+                await api.delete(`/events/${eventId}/save`, config);
+                setSavedIds(prev => {
+                    const next = new Set(prev);
+                    next.delete(eventId);
+                    return next;
+                });
+            } else {
+                await api.post(`/events/${eventId}/save`, {}, config);
+                setSavedIds(prev => {
+                    const next = new Set(prev);
+                    next.add(eventId);
+                    return next;
+                });
+            }
+        } catch (err) {
+            console.error("Save toggle failed", err);
+        }
     }
 
     return (
@@ -106,7 +143,13 @@ export default function Home() {
                                 
                                 <div className="flex justify-between items-start mb-4">
                                     <h3 className="text-[17px] font-bold text-[#F3F4F6] leading-tight pr-4 group-hover:text-[#6366F1] transition-colors">{ev.title}</h3>
-                                    <svg className="w-5 h-5 text-[#9CA3AF] hover:text-[#F3F4F6] cursor-pointer transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                                    <button 
+                                        onClick={() => toggleSaveEvent(ev.id)} 
+                                        className={`${savedIds.has(ev.id) ? 'text-[#6366F1]' : 'text-[#9CA3AF] hover:text-[#F3F4F6]'} cursor-pointer transition-colors shrink-0`}
+                                        title={savedIds.has(ev.id) ? "Remove Bookmark" : "Bookmark Event"}
+                                    >
+                                        <svg className="w-5 h-5" fill={savedIds.has(ev.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+                                    </button>
                                 </div>
                                 
                                 <div className="flex items-center gap-2 mb-4">
