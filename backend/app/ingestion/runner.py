@@ -36,39 +36,58 @@ def run_ingestion(db: Session, limit: int = 10, sources: list[str] | None = None
 
     print(f"  [ingestion] Total raw events: {len(raw_events)}")
 
-    new_events = []
+    processed_events = []
     for raw in raw_events:
-        # Dedup
-        existing = db.query(models.Event).filter(models.Event.url == raw.url).first()
-        if existing:
-            print(f"  [dedup] Skipping: {raw.title}")
-            continue
-
         # Intelligence
         food_detected, keywords, food_score = detect_food(raw.description)
         city = extract_location(raw.location_text)
         event_type = detect_event_type(raw.description)
         relevance_score = compute_score(food_score, raw.description)
+        
+        # New V4 Scoring System
+        total_score = food_score + relevance_score
+        food_confidence = 1.0 if food_detected else 0.0 # Calculate based on keywords next time
+
         lat, lon = geocode(city)
 
-        event = models.Event(
-            title=raw.title,
-            description=raw.description[:5000],
-            url=raw.url,
-            city=city,
-            event_type=event_type,
-            lat=lat,
-            lon=lon,
-            food_score=food_score,
-            relevance_score=relevance_score,
-            source=raw.source,
-            keywords=keywords,
-            start_date=raw.start_date,
-        )
-        db.add(event)
-        new_events.append(event)
-        print(f"  [new] {raw.title} | city={city} | type={event_type} | food={food_score} | score={relevance_score}")
+        # Upsert Dedup
+        existing = db.query(models.Event).filter(models.Event.url == raw.url).first()
+        if existing:
+            print(f"  [dedup] Updating existing: {raw.title}")
+            existing.title = raw.title
+            existing.description = raw.description[:5000]
+            existing.city = city
+            existing.event_type = event_type
+            existing.lat = lat
+            existing.lon = lon
+            existing.food_score = food_score
+            existing.relevance_score = relevance_score
+            existing.total_score = total_score
+            existing.food_confidence = food_confidence
+            existing.keywords = keywords
+            existing.start_date = raw.start_date
+            processed_events.append(existing)
+        else:
+            print(f"  [new] Inserting: {raw.title}")
+            event = models.Event(
+                title=raw.title,
+                description=raw.description[:5000],
+                url=raw.url,
+                city=city,
+                event_type=event_type,
+                lat=lat,
+                lon=lon,
+                food_score=food_score,
+                relevance_score=relevance_score,
+                total_score=total_score,
+                food_confidence=food_confidence,
+                source=raw.source,
+                keywords=keywords,
+                start_date=raw.start_date,
+            )
+            db.add(event)
+            processed_events.append(event)
 
     db.commit()
-    print(f"  [ingestion] Saved {len(new_events)} new events.")
-    return new_events
+    print(f"  [ingestion] Processed {len(processed_events)} events.")
+    return processed_events
