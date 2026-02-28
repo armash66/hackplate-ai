@@ -6,10 +6,9 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite:///./hackplate.db"
 
-    # JWT
-    JWT_SECRET: str
-    JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRE_MINUTES: int = 1440  # 24 hours
+    # Auth (Clerk)
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: str
+    CLERK_SECRET_KEY: str
 
     # Telegram
     TELEGRAM_BOT_TOKEN: str = ""
@@ -22,7 +21,7 @@ class Settings(BaseSettings):
     SCRAPE_LIMIT: int = 10
 
     class Config:
-        env_file = ".env"
+        env_file = (".env", "../.env")
         env_file_encoding = "utf-8"
 
 

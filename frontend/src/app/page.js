@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { getOverview, searchEvents, triggerIngest } from "../lib/api";
 
 export default function Home() {
+    const { getToken } = useAuth();
     const [overview, setOverview] = useState(null);
     const [recentEvents, setRecentEvents] = useState([]);
     const [ingesting, setIngesting] = useState(false);
@@ -27,11 +29,16 @@ export default function Home() {
     async function handleIngest() {
         setIngesting(true);
         try {
-            const res = await triggerIngest(10);
+            const token = await getToken();
+            const res = await triggerIngest(token, 10);
             alert(`Ingestion complete! ${res.data.new_events} new events found.`);
             loadData();
         } catch (e) {
-            alert("Ingestion failed. Is the backend running?");
+            if (e.response && e.response.status === 401) {
+                alert("Login required! Please log in first to run the scraper.");
+            } else {
+                alert("Ingestion failed. Is the backend running?");
+            }
         }
         setIngesting(false);
     }

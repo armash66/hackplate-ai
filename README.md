@@ -20,8 +20,8 @@ HackPlate uses a modern, layered SaaS architecture:
 
 - **Frontend:** Next.js (React), Tailwind CSS, Chart.js, Leaflet
 - **Backend:** FastAPI (Python), SQLAlchemy, Pydantic
-- **Database:** PostgreSQL (via Supabase)
-- **Auth:** JWT (JSON Web Tokens) with bcrypt password hashing
+- **Database:** PostgreSQL (via Supabase) or local SQLite
+- **Auth:** Clerk Authentication Engine
 - **Ingestion:** Playwright and BeautifulSoup4
 - **Notifications:** Telegram Bot API
 
@@ -61,12 +61,9 @@ hackplate-ai/
 ```bash
 cd backend
 
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
+# Install dependencies globally (Virtual Environments are not required!)
 pip install -r requirements.txt
+pip install psycopg2-binary  # Required for Windows Supabase connection
 
 # Install Playwright browsers (for Devfolio scraper)
 playwright install chromium
@@ -76,14 +73,19 @@ playwright install chromium
 Create a `.env` file in the root directory:
 ```env
 # Database
-DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@db.xxxxx.supabase.co:5432/postgres
+DATABASE_URL=sqlite:///./hackplate.db # Or your Supabase connection string
 
-# Security
-JWT_SECRET=your_super_secret_jwt_key
+# Security (Clerk)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
 
 # Telegram
 TELEGRAM_BOT_TOKEN=your_bot_token_here
 TELEGRAM_CHAT_ID=your_chat_id_here
+```
+Create a `.env.local` file in the `frontend/` directory to pass the public key to Next.js:
+```env
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 ```
 
 ### 4. Frontend Setup

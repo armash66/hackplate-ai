@@ -1,48 +1,57 @@
-from datetime import datetime, timedelta
-from passlib.context import CryptContext
-from jose import jwt, JWTError
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from clerk_backend_api import Clerk
+import jwt
+
 from ..config import get_settings
 from ..database import get_db
 from .. import models
 
 settings = get_settings()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
+# We only need the token parsing from OAuth2 (FastAPI will grab the Bearer token)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="placeholder")
 
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
-
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
-
-
-def create_token(user_id: int) -> str:
-    expires = datetime.utcnow() + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
-    payload = {"sub": str(user_id), "exp": expires}
-    return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
-
+# Initialize the Clerk SDK
+clerk = Clerk(bearer_auth=settings.CLERK_SECRET_KEY)
 
 def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    request: Request,
     db: Session = Depends(get_db),
 ) -> models.User:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid or expired token",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    from clerk_backend_api.security import AuthenticateRequestOptions
+    
     try:
-        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
-        user_id = int(payload.get("sub"))
-    except (JWTError, ValueError, TypeError):
-        raise credentials_exception
+        req_state = clerk.authenticate_request(
+            request,
+            AuthenticateRequestOptions()
+        )
+    except Exception as e:
+        print(f"Clerk Auth Exception: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Auth error: {e}",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not req_state.is_signed_in:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing authentication token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
+    clerk_id = req_state.payload.get("sub")
+
+    # Find the user by their unique Clerk ID in our local database
+    user = db.query(models.User).filter(models.User.clerk_id == clerk_id).first()
+    
+    # Auto-provision the user if this is their first time accessing the backend
     if not user:
-        raise credentials_exception
+        user = models.User(clerk_id=clerk_id)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        
     return user
